@@ -295,6 +295,13 @@ impl MappingStore {
                 } else {
                     format!("#{}", room_id)
                 }
+            } else if room.get_members().len() == 2 {
+                if let Some(other) = room.get_members().keys().find(|x| !x.contains("jbuch")) {
+                    let nick = other.replace("@", "");
+                    format!("{}", other)
+                } else {
+                    format!("#{}", room_id)
+                }
             } else {
                 format!("#{}", room_id)
             }
