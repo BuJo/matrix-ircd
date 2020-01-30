@@ -116,35 +116,6 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
                     warn!(self.ctx.logger, "Unknown channel"; "channel" => channel.as_str());
                 }
             }
-            IrcCommand::Join { channel } => {
-                info!(self.ctx.logger, "Joining channel"; "channel" => channel.clone());
-
-                let join_future = self.matrix_client.join_room(channel.as_str())
-                    .into_tasked()
-                    .map(move |room_join_response, bridge: &mut Bridge<IS>| {
-                        let room_id = room_join_response.room_id;
-
-                        task_info!("Joined channel"; "channel" => channel.clone(), "room_id" => room_id.clone());
-
-                        if let Some(mapped_channel) = bridge.mappings.room_id_to_channel(&room_id) {
-                            if mapped_channel == &channel {
-                                // We've already joined this channel, most likely we got the sync
-                                // response before the joined response.
-                                // TODO: Do we wan to send something to IRC?
-                                task_trace!("Already in IRC channel");
-                            } else {
-                                // We respond to the join with a redirect!
-                                task_trace!("Redirecting channl"; "prev" => channel.clone(), "new" => mapped_channel.clone());
-                                bridge.irc_conn.write_redirect_join(&channel, mapped_channel);
-                            }
-                        } else {
-                            task_trace!("Waiting for room to come down sync"; "room_id" => room_id.clone());
-                            bridge.joining_map.insert(room_id, channel);
-                        }
-                    });
-                // TODO: Handle failure of join. Ensure that joining map is cleared.
-                self.spawn(join_future);
-            }
             // TODO: Handle PART
             c => {
                 warn!(self.ctx.logger, "Ignoring IRC command"; "command" => c.command());
