@@ -312,6 +312,7 @@ impl MappingStore {
             }
         }
 
+        task_trace!("mapping matrix -> irc"; "matrix" => room_id, "irc" => channel.clone() );
         self.room_id_to_channel.insert(room_id.into(), channel.clone());
         self.channel_to_room_id.insert(channel.clone(), room_id.into());
 
