@@ -306,6 +306,7 @@ impl MappingStore {
                 format!("#{}", room_id)
             }
         };
+        channel = channel.replace(":synyx.de", "");
 
         if irc_server.channel_exists(&channel) {
             let mut idx = 1;
