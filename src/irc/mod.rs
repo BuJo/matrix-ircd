@@ -110,7 +110,7 @@ impl<S: AsyncRead + AsyncWrite + 'static> IrcUserConnection<S> {
                 trace!(ctx_clone.logger, "IRC conn values";
                     "nick" => user_conn.nick.clone(),
                     "user" => user_conn.user.clone(),
-                    "password" => user_conn.password.clone(),
+                    "password" =>"*********",
                 );
 
                 Ok(user_conn)
