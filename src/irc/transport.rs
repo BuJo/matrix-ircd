@@ -106,7 +106,7 @@ impl<S: AsyncRead + AsyncWrite> IrcServerConnection<S> {
             for &(nick, op) in iter {
                 write!(line, "{}{} ", if op {"@"} else {""}, &nick).unwrap();
             }
-            line.trim();
+            line = line.trim().to_string();
             self.write_numeric(Numeric::RplNamreply, nick, &line);
         }
         self.write_numeric(Numeric::RplEndofnames, nick, &format!("{} :End of /NAMES", channel));
