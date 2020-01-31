@@ -36,7 +36,7 @@ use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_core::reactor::Handle;
 use url::Url;
 
-use tasked_futures::{TaskExecutorQueue, TaskExecutor, FutureTaskedExt, TaskedFuture};
+use tasked_futures::{TaskExecutorQueue, TaskExecutor};
 
 
 /// Bridges a single IRC connection with a matrix session.

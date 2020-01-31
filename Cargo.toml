@@ -1,7 +1,7 @@
 [package]
 authors = ["Erik Johnston <erikj@matrix.org>"]
 name = "matrix-ircd"
-version = "0.1.0"
+version = "0.1.0-jo2"
 edition = "2018"
 
 [dependencies]

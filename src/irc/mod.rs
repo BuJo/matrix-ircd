@@ -144,7 +144,7 @@ impl<S: AsyncRead + AsyncWrite + 'static> IrcUserConnection<S> {
         let IrcUserConnection { ref mut server_model, ref mut conn, .. } = *self;
 
         if let (Some(channel), Some(members)) = (server_model.get_channel(name), server_model.get_members(name)) {
-            let names: Vec<_> = members.iter().map(|&(ref user, ref entry)| (&user.nick, entry.operator)).collect();
+            let names: Vec<_> = members.iter().map(|&(ref user, ref entry)| (&user.user, entry.operator)).collect();
             conn.write_join(&self.user_prefix, &channel.name);
             conn.write_topic(&self.server_name, &channel.name, &channel.topic);
             conn.write_names(&self.nick, name, &names[..]);
