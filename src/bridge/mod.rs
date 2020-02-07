@@ -157,6 +157,11 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
             }
         }
 
+        // Simply ignore old messages, irc client can handle it
+        if self.is_first_sync {
+            return;
+        }
+
         for ev in &sync.timeline.events {
             if ev.etype == "m.room.message" {
                 let sender_nick = match self.mappings.get_nick_from_matrix(&ev.sender) {
