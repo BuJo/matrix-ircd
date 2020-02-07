@@ -112,6 +112,18 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
                         self.matrix_client.send_text_message(room_id, text)
                         .map(|_| ()).map_err(move |_| task_warn!("Failed to send"))
                     );
+                } else if let Some(nick) = self.mappings.get_nick_from_matrix(&channel) {
+                    info!(self.ctx.logger, "Got privmsg"; "channel" => channel.as_str(), "user" => channel.clone());
+                    let blah = nick.clone();
+                    if let Some(room_id) = self.mappings.channel_to_room_id(&blah[..]) {
+                        info!(self.ctx.logger, "Got privmsg"; "room_id" => room_id.as_str(), "user" => channel.clone());
+                        self.handle.spawn(
+                            self.matrix_client.send_text_message(&channel, text)
+                                .map(|_| ()).map_err(move |_| task_warn!("Failed to send"))
+                        );
+                    } else {
+                        warn!(self.ctx.logger, "Unknown user"; "user" => channel.as_str(), "nick" => blah);
+                    }
                 } else {
                     warn!(self.ctx.logger, "Unknown channel"; "channel" => channel.as_str());
                 }
@@ -164,13 +176,19 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
 
         for ev in &sync.timeline.events {
             if ev.etype == "m.room.message" {
-                let sender_nick = match self.mappings.get_nick_from_matrix(&ev.sender) {
+                /* let sender_nick = match self.mappings.get_nick_from_matrix(&ev.sender) {
                     Some(x) => x,
                     None    => {
                         warn!(self.ctx.logger, "Sender not in room"; "room" => room_id, "sender" => &ev.sender[..]);
                         continue;
                     }
-                };
+                };*/
+                let sender_nick = &ev.sender.clone()[..];
+                task_debug!("msg sync";
+                    "sender" => ev.sender.clone(),
+                    "ircnick" => sender_nick.clone(),
+                    "channel" => channel.clone()
+                );
                 let body = match ev.content.get("body").and_then(Value::as_str) {
                     Some(x) => x,
                     None    => {
@@ -303,7 +321,12 @@ impl MappingStore {
             } else if room.get_members().len() == 2 {
                 if let Some(other) = room.get_members().keys().find(|x| !x.contains("jbuch")) {
                     let _nick = other.replace("@", "");
-                    format!("{}", _nick)
+                    //format!("{}", _nick)
+                    // we will not be joining query rooms
+                    task_debug!("mapping matrix -> irc"; "matrix" => room_id, "irc" => other.clone() );
+                    self.room_id_to_channel.insert(room_id.into(), other.clone());
+                    self.channel_to_room_id.insert(other.clone(), room_id.into());
+                    return ("jbuch".to_string(), false);
                 } else {
                     format!("#{}", room_id)
                 }
@@ -325,7 +348,7 @@ impl MappingStore {
             }
         }
 
-        task_trace!("mapping matrix -> irc"; "matrix" => room_id, "irc" => channel.clone() );
+        task_debug!("mapping matrix -> irc"; "matrix" => room_id, "irc" => channel.clone() );
         self.room_id_to_channel.insert(room_id.into(), channel.clone());
         self.channel_to_room_id.insert(channel.clone(), room_id.into());
 
@@ -384,5 +407,9 @@ impl MappingStore {
 
     pub fn get_nick_from_matrix(&self, user_id: &str) -> Option<&String> {
         self.matrix_uid_to_nick.get(user_id)
+    }
+
+    pub fn get_matrix_user_from_nick(&self, nick: &str) -> Option<&String> {
+        self.nick_matrix_uid.get(nick)
     }
 }
