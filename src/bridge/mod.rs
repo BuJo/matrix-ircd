@@ -36,7 +36,7 @@ use tokio_io::{AsyncRead, AsyncWrite};
 use tokio_core::reactor::Handle;
 use url::Url;
 
-use tasked_futures::{TaskExecutorQueue, TaskExecutor};
+use tasked_futures::{TaskExecutorQueue, TaskExecutor, TaskedFuture, FutureTaskedExt};
 
 
 /// Bridges a single IRC connection with a matrix session.
@@ -131,6 +131,17 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
             IrcCommand::Join { channel } => {
                 info!(self.ctx.logger, "Joining channel"; "channel" => channel.clone());
 
+                if true {
+                    for _channel in channel.split(",") {
+                        if let Some(room_id) = self.mappings.channel_to_room_id.get(_channel) {
+                            info!(self.ctx.logger, "Ignoring join command"; "channel" => _channel.clone(), "room_id" => room_id.clone());
+                        } else {
+                            warn!(self.ctx.logger, "Ignoring join command"; "channel" => _channel.clone());
+                        }
+                    }
+                    return;
+                }
+
                 let join_future = self.matrix_client.join_room(channel.as_str())
                     .into_tasked()
                     .map(move |room_join_response, bridge: &mut Bridge<IS>| {
@@ -146,7 +157,7 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
                                 task_trace!("Already in IRC channel");
                             } else {
                                 // We respond to the join with a redirect!
-                                task_trace!("Redirecting channl"; "prev" => channel.clone(), "new" => mapped_channel.clone());
+                                task_trace!("Redirecting channel"; "prev" => channel.clone(), "new" => mapped_channel.clone());
                                 bridge.irc_conn.write_redirect_join(&channel, mapped_channel);
                             }
                         } else {
