@@ -245,6 +245,7 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
                 match msgtype {
                     "m.text"  => self.irc_conn.send_message(&channel, sender_nick, body),
                     "m.emote" => self.irc_conn.send_action(&channel, sender_nick, body),
+                    "m.notice"  => self.irc_conn.send_message(&channel, sender_nick, body),
                     "m.image" | "m.file" | "m.video" | "m.audio" => {
                         let url = ev.content.get("url").and_then(Value::as_str);
                         match url {
@@ -370,6 +371,7 @@ impl MappingStore {
                     format!("#{}", room_id)
                 }
             } else {
+
                 format!("#{}", room_id)
             }
         };
