@@ -250,7 +250,7 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
                         let url = ev.content.get("url").and_then(Value::as_str);
                         match url {
                             Some(url) => self.irc_conn.send_message(&channel, sender_nick,
-                                                                    self.matrix_client.media_url(&url).as_str()),
+                                                                    &("".to_owned() + msgtype + ": " + self.matrix_client.media_url(&url).as_str())),
                             None      => warn!(self.ctx.logger, "Media message has no url"; "room" => room_id,
                                                                                             "message" => format!("{:?}", ev))
                         }
