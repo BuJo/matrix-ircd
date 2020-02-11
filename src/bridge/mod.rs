@@ -107,7 +107,7 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
         match line {
             IrcCommand::PrivMsg { channel, text } => {
                 if let Some(room_id) = self.mappings.channel_to_room_id(&channel) {
-                    info!(self.ctx.logger, "Got msg"; "channel" => channel.as_str(), "room_id" => room_id.as_str());
+                    debug!(self.ctx.logger, "Got msg"; "channel" => channel.as_str(), "room_id" => room_id.as_str());
                     self.handle.spawn(
                         self.matrix_client.send_text_message(room_id, text)
                         .map(|_| ()).map_err(move |_| task_warn!("Failed to send"))
@@ -116,7 +116,7 @@ impl<IS: AsyncRead + AsyncWrite + 'static> Bridge<IS> {
                     info!(self.ctx.logger, "Got privmsg"; "channel" => channel.as_str(), "user" => nick.clone());
                     let _nick = nick.clone();
                     if let Some(room_id) = self.mappings.channel_to_room_id(&_nick[..]) {
-                        info!(self.ctx.logger, "Got privmsg"; "room_id" => room_id.as_str(), "user" => _nick.clone());
+                        debug!(self.ctx.logger, "Got privmsg"; "room_id" => room_id.as_str(), "user" => _nick.clone());
                         self.handle.spawn(
                             self.matrix_client.send_text_message(&room_id, text)
                                 .map(|_| ()).map_err(move |_| task_warn!("Failed to send"))
